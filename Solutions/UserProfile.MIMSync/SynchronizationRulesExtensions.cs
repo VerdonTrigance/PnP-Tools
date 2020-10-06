@@ -2,6 +2,7 @@ using Microsoft.MetadirectoryServices;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,35 +10,35 @@ using System.Text.RegularExpressions;
 namespace SynchronizationRulesExtensions
 {
     /// <summary>
-    /// MV rules 
+    /// MV rules
     /// </summary>
     /// <remarks>
-    /// The IMVSynchronization interface is implemented by a Microsoft Identity Integration Server 
+    /// The IMVSynchronization interface is implemented by a Microsoft Identity Integration Server
     /// rules extension to provide rules extension functionality for provisioning.
     /// </remarks>
     public class MVExtensionObject : IMVSynchronization
     {
         /// <summary>
         /// IMVSynchronization.Initialize
-        /// Initializes the rules extension object. The Identity Integration Server calls this method 
-        /// when it loads the extension. This method is also called if you drop a new or 
+        /// Initializes the rules extension object. The Identity Integration Server calls this method
+        /// when it loads the extension. This method is also called if you drop a new or
         /// updated assembly into the extensions folder.
         /// </summary>
-        void IMVSynchronization.Initialize(){}
+        void IMVSynchronization.Initialize() { }
 
         /// <summary>
         /// IMVSynchronization.Terminate
-        /// Called when the rules extension object is no longer needed. The Identity Integration Server 
-        /// calls this method when the extension is unloaded, which normally occurs after 5 minutes of 
-        /// inactivity. Note that you cannot change the inactivity period and should not assume the 
+        /// Called when the rules extension object is no longer needed. The Identity Integration Server
+        /// calls this method when the extension is unloaded, which normally occurs after 5 minutes of
+        /// inactivity. Note that you cannot change the inactivity period and should not assume the
         /// period will always remain as 5 minutes in subsequent releases.
         /// </summary>
-        void IMVSynchronization.Terminate(){}
+        void IMVSynchronization.Terminate() { }
 
         /// <summary>
         /// IMVSynchronization.Provision
-        /// Evaluates connected objects in response to changes to a metaverse object. 
-        /// The Identity Integration Server calls this method during a management agent run 
+        /// Evaluates connected objects in response to changes to a metaverse object.
+        /// The Identity Integration Server calls this method during a management agent run
         /// when synchronization rules cause a change in the metaverse object.
         /// </summary>
         /// <param name="mventry"></param>
@@ -48,9 +49,9 @@ namespace SynchronizationRulesExtensions
 
         /// <summary>
         /// IMVSynchronization.ShouldDeleteFromMV
-        /// Determines if the metaverse object should be deleted along with the connector space object 
-        /// after a connector space object has been disconnected from a metaverse object during inbound 
-        /// synchronization. The Identity Integration Server calls this method when an object deletion rule, 
+        /// Determines if the metaverse object should be deleted along with the connector space object
+        /// after a connector space object has been disconnected from a metaverse object during inbound
+        /// synchronization. The Identity Integration Server calls this method when an object deletion rule,
         /// which was configured in Identity Manager to use a rules extension, is triggered.
         /// </summary>
         /// <param name="csentry"></param>
@@ -61,7 +62,7 @@ namespace SynchronizationRulesExtensions
             throw new EntryPointNotImplementedException();
         }
 
-        void ProvisionUPSA(MVEntry mventry, string MA_name)
+        private void ProvisionUPSA(MVEntry mventry, string MA_name)
         {
             var attr_map = new Dictionary<string, string>()
             {
@@ -108,7 +109,6 @@ namespace SynchronizationRulesExtensions
                         CSEntry csentry = ManagementAgent.Connectors.StartNewConnector("group");
                         csentry["Anchor"].Value = anchor;
                         csentry.CommitNewConnector();
-
                     }
                 }
                 catch (ObjectAlreadyExistsException)
@@ -116,7 +116,6 @@ namespace SynchronizationRulesExtensions
                     // Suppress the exception when an object exists with same distinguished name in the connector space.
                     // The object should join on the next inbound synchronization run
                 }
-
             }
             if (mventry.ObjectType.ToLower() == "contact" && 0 == Connectors)
             {
@@ -143,7 +142,7 @@ namespace SynchronizationRulesExtensions
     /// MA rules
     /// </summary>
     /// <remarks>
-    /// The IMASynchronization interface is implemented by a Microsoft Identity Integration Server 
+    /// The IMASynchronization interface is implemented by a Microsoft Identity Integration Server
     /// rules extension to provide rules extension functionality for a management agent.
     /// </remarks>
     public class MAExtensionObject : IMASynchronization
@@ -152,17 +151,17 @@ namespace SynchronizationRulesExtensions
         /// The IMASynchronization.Initialize method initializes the rules extension object.
         /// </summary>
         /// <remarks>
-        /// If an exception occurs in this method, the IMASynchronization.Terminate method is not called. 
-        /// If the IMASynchronization.Terminate method releases any resources allocated in the initialize method, 
-        /// those resources remain when an exception occurs in this method because the IMASynchronization.Terminate 
+        /// If an exception occurs in this method, the IMASynchronization.Terminate method is not called.
+        /// If the IMASynchronization.Terminate method releases any resources allocated in the initialize method,
+        /// those resources remain when an exception occurs in this method because the IMASynchronization.Terminate
         /// method is not called. Release any resources allocated in this method as part of your exception handling routine.
         /// </remarks>
-        void IMASynchronization.Initialize(){}
+        void IMASynchronization.Initialize() { }
 
         /// <summary>
         /// The IMASynchronization.Terminate method is called when the rules extension object is no longer needed. This method is used to free resources owned by the rules extension.
         /// </summary>
-        void IMASynchronization.Terminate(){}
+        void IMASynchronization.Terminate() { }
 
         /// <summary>
         /// The ShouldProjectToMV method is called to determine if a new connector space object should be projected to a new metaverse object when the connector space object does not join to an existing metaverse object.
@@ -182,14 +181,14 @@ namespace SynchronizationRulesExtensions
                 case "user":
                     MVObjectType = "Person";
 
-                    // Cross-forest domain accounts are projected as contacts. They will be flowed to 
-                    // to MOSS to establish the cross-forest relationship in order to resolve to 
+                    // Cross-forest domain accounts are projected as contacts. They will be flowed to
+                    // to MOSS to establish the cross-forest relationship in order to resolve to
                     // forest (master) account if user logs in using cross-forest (subordinate) account.
                     if (csentry["msDS-SourceObjectDN"].IsPresent)
                     {
                         sourceObjectDN = csentry["msDS-SourceObjectDN"].Value;
-                        if ((!String.IsNullOrEmpty(sourceObjectDN)) &&
-                            (sourceObjectDN != csentry.DN.ToString()))
+                        if (!string.IsNullOrEmpty(sourceObjectDN) &&
+                            sourceObjectDN != csentry.DN.ToString())
                         {
                             MVObjectType = "contact";
                         }
@@ -215,7 +214,7 @@ namespace SynchronizationRulesExtensions
 
                     // Ignore contacts without sourceObjectDN or self-referencing ones
                     sourceObjectDN = csentry["msDS-SourceObjectDN"].Value;
-                    if (String.IsNullOrEmpty(sourceObjectDN) || String.Compare(sourceObjectDN, csentry.DN.ToString(), StringComparison.OrdinalIgnoreCase) == 0)
+                    if (string.IsNullOrEmpty(sourceObjectDN) || string.Compare(sourceObjectDN, csentry.DN.ToString(), StringComparison.OrdinalIgnoreCase) == 0)
                         return false;
 
                     break;
@@ -227,7 +226,7 @@ namespace SynchronizationRulesExtensions
         }
 
         /// <summary>
-        /// The Deprovision method is called when a metaverse entry is deleted and the 
+        /// The Deprovision method is called when a metaverse entry is deleted and the
         /// connector space entries connected to the metaverse entry become disconnector objects.
         /// </summary>
         /// <param name="csentry">Contains a CSEntry object that represents the connector space entry that was connected to the deleted metaverse entry.</param>
@@ -238,8 +237,8 @@ namespace SynchronizationRulesExtensions
         }
 
         /// <summary>
-        /// The FilterForDisconnection method determines if a connector CSEntry object will be disconnected. 
-        /// A connector space or CSEntry object is disconnected when a delta export matches a filter or if 
+        /// The FilterForDisconnection method determines if a connector CSEntry object will be disconnected.
+        /// A connector space or CSEntry object is disconnected when a delta export matches a filter or if
         /// the filter rules are changed and the new filter criteria for disconnecting an object are met.
         /// </summary>
         /// <param name="csentry">Contains the CSEntry object to which this method applies.</param>
@@ -315,7 +314,7 @@ namespace SynchronizationRulesExtensions
                     GetFlowRuleParameters(FlowRuleName, out ruleName, out csAttribute, out mvAttribute);
                     try
                     {
-                        String[] valueArray;
+                        string[] valueArray;
                         if (csentry[csAttribute].IsPresent)
                         {
                             // Usually proxy address is multivalue, but just in case it is checked here and handled accordingly
@@ -325,9 +324,9 @@ namespace SynchronizationRulesExtensions
                             }
                             else
                             {
-                                valueArray = new String[1] { csentry[csAttribute].Value };
+                                valueArray = new string[1] { csentry[csAttribute].Value };
                             }
-                            foreach (String value in valueArray)
+                            foreach (string value in valueArray)
                             {
                                 if (value.StartsWith("sip:", StringComparison.OrdinalIgnoreCase) == true)
                                 {
@@ -343,6 +342,20 @@ namespace SynchronizationRulesExtensions
                     }
                     break;
 
+                case "AccountExpiresToEmployeeEndDate:accountExpires,employeeEndDate":
+
+                    GetFlowRuleParameters(FlowRuleName, out ruleName, out csAttribute, out mvAttribute);
+                    if (csentry[csAttribute].IntegerValue == 0 || csentry[csAttribute].IntegerValue == long.MaxValue)
+                    {
+                        // This is a special condition, do not contribute and delete any current value
+                        mventry[mvAttribute].Delete();
+                    }
+                    else
+                    {
+                        DateTime dtFileTime = DateTime.FromFileTime(csentry[csAttribute].IntegerValue);
+                        mventry[mvAttribute].Value = dtFileTime.ToString("G", CultureInfo.CurrentCulture);
+                    }
+                    break;
             }
         }
 
@@ -350,10 +363,10 @@ namespace SynchronizationRulesExtensions
         /// The MapAttributesForExport method is called to map attributes from a metaverse entry to a connector space entry.
         /// </summary>
         /// <param name="FlowRuleName">
-        /// Contains the name of the flow rule. You must use only alphanumeric characters for the FlowRuleName parameter, 
+        /// Contains the name of the flow rule. You must use only alphanumeric characters for the FlowRuleName parameter,
         /// otherwise you can encounter problems in a rules extension.
-        /// Note:  Flow rules are not executed in the order shown in Identity Manager. 
-        /// Identity Integration Server uses these rules according to the state of the metaverse object. 
+        /// Note:  Flow rules are not executed in the order shown in Identity Manager.
+        /// Identity Integration Server uses these rules according to the state of the metaverse object.
         /// Configure your rules based on the state of the object rather than the rules being called in a predetermined order.
         /// </param>
         /// <param name="mventry">Contains an MVEntry object that represents the source metaverse entry.</param>
@@ -361,7 +374,7 @@ namespace SynchronizationRulesExtensions
         /// <remarks>
         /// This method is called when:
         ///   - the export flow rules do not overlap with the import flow rules or
-        ///   - if the source attribute has a precedence greater than or equal to the precedence of the overlapping import flow rule. 
+        ///   - if the source attribute has a precedence greater than or equal to the precedence of the overlapping import flow rule.
         ///     Management agent precedence is set in Metaverse Designer.
         /// </remarks>
         void IMASynchronization.MapAttributesForExport(string FlowRuleName, MVEntry mventry, CSEntry csentry)
@@ -373,7 +386,6 @@ namespace SynchronizationRulesExtensions
             {
                 case "GetDomain:distinguishedName,domain":
                     // This flow rule is to correctly populate the ProfileIdentifier attribute in the SharePoint Connectorspace object.
-
 
                     try
                     {
@@ -400,8 +412,8 @@ namespace SynchronizationRulesExtensions
                     catch (Exception e)
                     {
                         // For some reason the date was not able to be converted and
-                        // an exception occured. Throw decline of mapping which will 
-                        // either use a lower precedence mapping or will 
+                        // an exception occured. Throw decline of mapping which will
+                        // either use a lower precedence mapping or will
                         // skip the mapping for this attribute.
                         // However, it will not stop the run.
                         //  throw new DeclineMappingException();
@@ -437,20 +449,18 @@ namespace SynchronizationRulesExtensions
                     catch (Exception)
                     {
                         // For some reason the date was not able to be converted and
-                        // an exception occured. Throw decline of mapping which will 
-                        // either use a lower precedence mapping or will 
+                        // an exception occured. Throw decline of mapping which will
+                        // either use a lower precedence mapping or will
                         // skip the mapping for this attribute.
                         // However, it will not stop the run.
                         throw new DeclineMappingException();
                     }
                     break;
             }
-
-
         }
 
         #region Helper methods
-      
+
         static internal void GetFlowRuleParameters(string flowRule, out string ruleName, out string csAttribute, out string mvAttribute)
         {
             string pattern = @"^([^:]+):([^\,]+),([^\,]+$)";
@@ -460,7 +470,7 @@ namespace SynchronizationRulesExtensions
 
             // If we fail to get the rule name and attribute names from the rule then it is probably
             // not formed correctly and is invalid, so tell FIM that the mapping could not made.
-            if ((m.Success == false) || (m.Groups.Count != 4))
+            if (m.Success == false || m.Groups.Count != 4)
             {
                 // This exception will not stop the run, but
                 // may result in the mapping using a lower
@@ -483,7 +493,7 @@ namespace SynchronizationRulesExtensions
         {
             // Find the DC part of the distinguished name.
             int dcStart = 0;
-            for (;;)
+            for (; ; )
             {
                 dcStart = distinguishedName.IndexOf(",DC=", dcStart, StringComparison.OrdinalIgnoreCase);
                 if (dcStart < 0)
@@ -544,7 +554,7 @@ namespace SynchronizationRulesExtensions
                     string domainName = entry["dc"].Value.ToUpperInvariant();
 
                     // See if domain has a NETBIOS name and use it if available.
-                    // These crossRef entries are flowed in from the Partitions 
+                    // These crossRef entries are flowed in from the Partitions
                     // container in the configuration naming context.
                     MVEntry[] crossRefs = Utils.FindMVEntries("nCName", dn);
 
@@ -577,7 +587,7 @@ namespace SynchronizationRulesExtensions
         /// <returns>The parsed CN</returns>
         private static string GetDisplayNameFromDistinguishedName(string distinguishedName)
         {
-            if (String.IsNullOrEmpty(distinguishedName))
+            if (string.IsNullOrEmpty(distinguishedName))
                 return null;
 
             StringBuilder sb = new StringBuilder(100);
@@ -591,7 +601,7 @@ namespace SynchronizationRulesExtensions
                 char ch = distinguishedName[pos];
                 if (prevCharCode > 0)
                 {
-                    if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F'))
+                    if ('0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || 'A' <= ch && ch <= 'F')
                     {
                         byte b;
                         if (ch > '9')
@@ -668,7 +678,7 @@ namespace SynchronizationRulesExtensions
             ms.Position = 0;
             foreach (char ch in decoded)
             {
-                if (Char.IsControl(ch))
+                if (char.IsControl(ch))
                 {
                     sb.Append(' ');
                 }
@@ -679,8 +689,6 @@ namespace SynchronizationRulesExtensions
             }
         }
 
-        #endregion
+        #endregion Helper methods
     }
 }
-
-
